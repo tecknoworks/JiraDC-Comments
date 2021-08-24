@@ -51,16 +51,37 @@ app.post('/allItemComments', async (req, res) =>{
     let result=[]
     for (let index = 0; index < record.length; index++) {
 
+        var dateTime={
+            year:record[index].date.getFullYear(),
+            month:record[index].date.getMonth(),
+            day:record[index].date.getDate(),
+            hour:record[index].date.getHours(),
+            minute:record[index].date.getMinutes()
+        }
         const commentElement = {
             _id: record[index]._id,
             content:record[index].content,
             user:users[index].username,
-            date:record[index].date,
+            date:dateTime,
             work_item:record[index].work_item,
         }
         result.push(commentElement);   
     }  
     res.json(result)
+})
+app.put('/comment', async (req, res) =>{
+    const newObject = req.body
+
+    console.log(newObject)
+    let commentDate=new Date(newObject.date.year,newObject.date.month,newObject.date.day,newObject.date.hour,newObject.date.minute,newObject.date.seconds,newObject.date.miliseconds)
+    console.log(commentDate)
+    const editedObject={content:newObject.content}
+    const filter={user:newObject.user,work_item:newObject.work_item,date:commentDate}
+    let update_= await Comment.findOneAndUpdate(filter, editedObject, {
+        new: true,
+        upsert: true 
+      });
+    res.send(update_)
 })
 
 app.listen(port, () => {
