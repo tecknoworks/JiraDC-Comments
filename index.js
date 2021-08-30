@@ -23,7 +23,6 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 app.post('/comment', async (req, res) => {
     let newComment = req.body
-    console.log(newComment)
     var addComment=new Comment({content:newComment.content,user:newComment.user,date:new Date(newComment.date),work_item:newComment.work_item})
     await Comment.create(addComment)
     res.send(newComment)
@@ -32,9 +31,12 @@ app.get('/comment', async (req, res) => {
     const record= await Comment.find({})
     res.send(record)
 })
-
-app.post('/allItemComments', async (req, res) =>{
-    const record= await Comment.find({'work_item':req.body._id})
+app.post('/allcomments', async (req, res) =>{
+    let result = [];
+    if (req.body.length) {
+        for (let index = 0; index < req.body.length; index++) {
+            if(req.body[index]!==''){
+                const record= await Comment.find({'work_item':req.body._id})
     let userIds=record.map(c => c.user);
     let users=[]
     await fetch(usersServiceUrl + '/allusersselected', 
@@ -67,14 +69,17 @@ app.post('/allItemComments', async (req, res) =>{
         }
         result.push(commentElement);   
     }  
+            }else{
+                result.push([]);
+            }
+            
+        }
+    }
     res.json(result)
 })
 app.put('/comment', async (req, res) =>{
     const newObject = req.body
-
-    console.log(newObject)
     let commentDate=new Date(newObject.date.year,newObject.date.month,newObject.date.day,newObject.date.hour,newObject.date.minute,newObject.date.seconds,newObject.date.miliseconds)
-    console.log(commentDate)
     const editedObject={content:newObject.content}
     const filter={user:newObject.user,work_item:newObject.work_item,date:commentDate}
     let update_= await Comment.findOneAndUpdate(filter, editedObject, {
